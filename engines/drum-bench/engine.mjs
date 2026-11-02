@@ -40,16 +40,21 @@ const SAMPLE_RATE = 44100;
 // about 1, where the raw pressure of a head struck at 0.1 m would be some hundreds.
 const OUTPUT_SCALE = 0.01;
 const PET_MODULUS_PA = 3.8e9;
-// The snare wires, as a set of coil segments lying on the second head. Mass, count and the contact are round numbers
-// for a strainer. FITTED, not measured: the level the wires add, how long they ring (a few milliseconds) and the span of
-// their pitches (1.5 to 13 kHz, a different few for every wire, so they make a noise and not a chord) are chosen against the
-// wires-on and wires-off pair of recorded snare hits (VCSL): the whole-hit octave bands to within about 9 dB, and the
-// strongest narrow line 30 to 150 ms after the hit within a few decibels of the recording's, and the 2 to 8 kHz envelope at
-// 5, 20, 50 and 150 ms to within about 5 dB. The wires are held harder at the ends (`pullEnds` times the middle's pull): the tight
-// ones land again at once and are the crack, the loose ones keep rattling to the tail. Without that the wires arrive late and
-// the snare scrapes.
+// The snare wires, as a set of coil segments lying on the second head. Mass, count and the contact damping are round numbers for a
+// strainer. FITTED, not measured, to the Virtuosity muted snare (a CC0 recording: one drum, one take per layer, no held-out layer),
+// compared in absolute level: 1/3-octave bands from 160 Hz to 6.3 kHz in windows from 5 to 400 ms, each Studio hit matched to the
+// recorded hit on its first 50 ms of energy, over four layers. The head is tuned so the strongest line in 150 to 330 Hz sits at the
+// recording's 226 Hz (a Studio buffer is 44.1 kHz; a check that assumed 48 kHz put it at 207 Hz and misled the first fit). The
+// muting is the head's own loss (damping) and the wires' ring decay: each wire rings at coilCount pitches of its own between
+// coilLowHz and coilHighHz; with coilTilt 1 the ring output (which falls as 1/f for an impulse) comes out flat across the
+// band, and coilSigmaTilt lets the high ones die a little sooner. The long and tail rings of an earlier fit stay in the code at
+// gain 0. The strainer pulls the wires on the head (wirePull, held harder at the ends by pullEnds); the head starts bent to rest
+// under that pull, and a wire rings only once it has left the head and landed, so a soft touch leaves them quiet and a hard one
+// throws them off. Still wrong: the narrow lines stand 10 to 20 dB prouder of their surroundings than the recording's, the 160 Hz
+// band has no tail after 100 ms (the recording has one), 200 to 400 ms is 5 to 15 dB light above 4 kHz, and 20 to 50 ms is 10 to
+// 25 dB hot at 160 to 400 Hz.
 const WIRE_COUNT = 20;
-const WIRE = { massKg: 3e-4, stiffness: 2e6, dampingRatio: 0.3, gain: 1.0, pullEnds: 16, coilCount: 6, coilLowHz: 1500, coilHighHz: 13000, coilSigma: 150, coilTilt: 0 };
+const WIRE = { massKg: 3e-4, stiffness: 2e6, dampingRatio: 0.3, gain: 0.264, pullEnds: 13.6, coilCount: 40, coilLowHz: 500, coilHighHz: 9000, coilSigma: 27.5, coilSigmaTilt: 0.308, coilTilt: 1, longHz: 950, longSpread: 0.102, longSigma: 13.44, longGain: 0, longCount: 4, tailGain: 0, tailSigma: 2.5, tailCount: 12 };
 // FITTED, like the toms': the model leaves a low thud under a hand drum's tone (the lowest modes of a small head, which a close
 // microphone does not pass), and the cut is a labelled fourth-order high-pass on the microphone that takes it out. It is chosen
 // against the recorded bongo's octave bands (low skirt within about 10 dB), not a claim that the recording was filtered. The
@@ -74,7 +79,7 @@ function drumFor(midi, diameterMm, depthMm, { bottom = 'open', thicknessUm = 190
   const params = {
     shellMaterial: shell, shellDepthMm: depthMm, shellClosed: bottom === 'closed', bottomHead: bottom === 'head',
     headMaterial: material, headThicknessUm: thicknessUm, headDiameterMm: diameterMm, headTension: Math.round(tension),
-    bottomTension: Math.round(tension * bottomRatio), bottomThicknessUm, damping, snareWires: wires, wirePull: 0.002, micLowCutHz: lowCutHz, levelDb, headLossFactor: lossFactor, headLossQuad: lossQuad,
+    bottomTension: Math.round(tension * bottomRatio), bottomThicknessUm, damping, snareWires: wires, wirePull: 0.0175, micLowCutHz: lowCutHz, levelDb, headLossFactor: lossFactor, headLossQuad: lossQuad,
   };
   return params;
 }
@@ -85,7 +90,8 @@ const RACK = [
   entry('tom-12', '12 in tom', 'A rack tom: a 12 in shell 9 in deep with a head on each end, the top tuned to the D below middle C and the bottom the same.', drumFor(50, 305, 230, { levelDb: 3.5, bottom: 'head', shell: 'sugar-maple', lowCutHz: TOM_LOW_CUT })),
   entry('floor-tom-16', '16 in floor tom', 'A floor tom, 16 in across and 16 in deep with a head on each end, tuned low.', drumFor(42, 406, 406, { levelDb: 4, bottom: 'head', shell: 'american-basswood', lowCutHz: TOM_LOW_CUT })),
   entry('kick-22', '22 in bass drum', 'A bass drum: 22 in across and 18 in deep, a head each end, both loose and left to ring (raise Damping to put a pillow against the batter head), struck with a felt beater. The thump is the two heads breathing in and out against the air between them.', drumFor(45, 559, 457, { levelDb: 4, bottom: 'head', bottomThicknessUm: 190, damping: 5, shell: 'sugar-maple' })),
-  entry('snare-14', '14 in snare drum', 'A 14 in drum 5½ in deep, tuned high, with a thin head under it and twenty snare wires lying on that head. Where the head moves away from them faster than their pull can follow they lift off and land again, and their coils rattle: that is the sizzle. Turn the wires off to hear the drum alone.', drumFor(58, 356, 140, { levelDb: 5.5, bottom: 'head', bottomThicknessUm: 75, bottomRatio: 1.15, wires: true, shell: 'sugar-maple' })),
+  // The snare is tuned to the recorded snare's lowest line (252 Hz with its wires off, VCSL), 1.4 semitones above the note the drum was first built for.
+  entry('snare-14', '14 in snare drum', 'A 14 in drum 5½ in deep, tuned high, with a thin head under it and twenty snare wires lying on that head. Where the head moves away from them faster than their pull can follow they lift off and land again, and their coils rattle: that is the sizzle. Turn the wires off to hear the drum alone.', drumFor(57.46, 356, 140, { levelDb: 5.5, bottom: 'head', bottomThicknessUm: 75, bottomRatio: 1.15, wires: true, shell: 'sugar-maple', damping: 19.3 })),
   entry('bongo-7', 'Bongo', 'A small 7 in head on a short shell open at the bottom, tuned high.', drumFor(78, 178, 180, { levelDb: 6, shell: 'white-ash', thicknessUm: 125, damping: 0, lossQuad: BONGO_LOSS_QUAD, lowCutHz: HAND_DRUM_LOW_CUT })),
   entry('kettle-26', '26 in kettledrum', 'A closed bowl under a 26 in head, as a timpani, the bowl taken as a cylinder of the same volume. The air in the bowl lifts the lowest mode, and the pitch you hear is the next one down.', drumFor(41, 660, 220, { levelDb: 4, bottom: 'closed', damping: 0.6, shell: 'brass' })),
   entry('frame-16', '16 in frame drum', 'A broad shallow frame, open at the back, tuned low and held by the rim.', drumFor(45, 406, 50, { levelDb: 5, shell: 'western-redcedar', damping: 3, lowCutHz: 100 })),
@@ -197,7 +203,7 @@ export const schema = {
     {
       id: 'wirePull', type: 'number', layer: 'advanced', group: 'shell', part: 'drum', label: 'Snare wire pull',
       help: 'How hard each segment of wire is pressed on the head, in newtons. A tight strainer holds the wires down and they only buzz on the loudest hits; a loose one buzzes at the softest touch and for longer.',
-      unit: 'N', min: 0.001, max: 0.3, scale: 'log', step: 0.001, default: 0.008, physical: 'other', visibleWhen: { snareWires: [true] },
+      unit: 'N', min: 0.001, max: 0.3, scale: 'log', step: 0.001, default: 0.028, physical: 'other', visibleWhen: { snareWires: [true] },
     },
     {
       id: 'bottomThicknessUm', role: 'bottomThicknessUm', type: 'number', layer: 'plain', group: 'head', part: 'drum', label: 'Thickness of the second head',
@@ -237,7 +243,7 @@ export const gallery = [
     id: 'drum-kit', name: 'A drum kit',
     description: 'A bass drum, a snare drum with its wires on, and a 10, a 12 and a 16 in tom, each a shell with a head at each end. Struck with a wooden stick (pick the felt beater for the bass drum).',
     params: { strikeAt: 0.5, strikeAngle: 0, stickHardness: 0.8 },
-    parts: { drum: [drumFor(45, 559, 457, { levelDb: 6, bottom: 'head', bottomThicknessUm: 190, damping: 5 }), drumFor(58, 356, 140, { levelDb: 5.5, bottom: 'head', bottomThicknessUm: 75, bottomRatio: 1.15, wires: true }), drumFor(54, 254, 200, { levelDb: 5.5, bottom: 'head', lowCutHz: TOM_LOW_CUT }), drumFor(50, 305, 230, { levelDb: 3, bottom: 'head', lowCutHz: TOM_LOW_CUT }), drumFor(42, 406, 406, { levelDb: 2, bottom: 'head', shell: 'american-basswood', lowCutHz: TOM_LOW_CUT })] },
+    parts: { drum: [drumFor(45, 559, 457, { levelDb: 6, bottom: 'head', bottomThicknessUm: 190, damping: 5 }), drumFor(57.46, 356, 140, { levelDb: 5.5, bottom: 'head', bottomThicknessUm: 75, bottomRatio: 1.15, wires: true, damping: 19.3 }), drumFor(54, 254, 200, { levelDb: 5.5, bottom: 'head', lowCutHz: TOM_LOW_CUT }), drumFor(50, 305, 230, { levelDb: 3, bottom: 'head', lowCutHz: TOM_LOW_CUT }), drumFor(42, 406, 406, { levelDb: 2, bottom: 'head', shell: 'american-basswood', lowCutHz: TOM_LOW_CUT })] },
   },
   {
     id: 'tom-trio', name: 'Three toms',

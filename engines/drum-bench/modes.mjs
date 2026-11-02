@@ -339,7 +339,7 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
   const nWire = W ? W.S.length : 0;
   const nCoupled = W ? W.idx.length : 0;
   const fk = new Float64Array(K); // force on each mode from the wires this step
-  let wiresLive = Boolean(W);
+  const wiresLive = Boolean(W);
   // A strainer holds its wires harder at the ends than in the middle: `pullEnds` is how many times harder the outermost
   // wire is held than the middle one (`preloadN`), so the tight ones land again at once and the loose ones keep rattling.
   const pullOf = Float64Array.from({ length: nWire }, (_, j) => (W ? wires.preloadN * (1 + ((wires.pullEnds ?? 1) - 1) * (nWire > 1 ? (2 * j / (nWire - 1) - 1) ** 2 : 0)) : 0));
@@ -348,6 +348,9 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
   const wPen = Float64Array.from(pullOf, (f) => (W ? f / wires.stiffness : 0));
   const wF = Float64Array.from(pullOf);
   const wFprev = Float64Array.from(pullOf);
+  // A coil rings when its wire has been in the air and lands, and goes on being shaken while the wire stays down; a wire that
+  // has lain on the head since before the blow, carried by it, is not driven by the head's motion through it.
+  const flown = new Uint8Array(nWire);
   const uFree = new Float64Array(nWire);
   const p0 = new Float64Array(nWire);
   let Cs = null;
@@ -357,17 +360,27 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
   // Without it, every wire rings at the same few pitches of `coilHz`.
   const nRes = W ? (wires.coilCount ?? wires.coilHz.length) : 0;
   const frac = (x) => x - Math.floor(x);
+  const longRing = Boolean(W && wires.longGain > 0);
+  const nLong = longRing ? (wires.longCount ?? 1) : 0;
+  const nTail = W && wires.tailGain > 0 ? (wires.tailCount ?? 1) : 0;
+  const nRing = nRes + nLong + nTail;
   const ringOf = (j, r) => {
+    if (r >= nRes + nLong) { // a few that last for seconds: the plateau the recorded wires leave round 1 kHz after the rest has gone
+      const hz = wires.longHz * (1 + wires.longSpread * (2 * frac(((j * nTail) + (r - nRes - nLong) + 0.37) * 0.6180339887498949) - 1)), wd = 2 * Math.PI * hz, decay = Math.exp(-wires.tailSigma * dt);
+      return { a1: 2 * decay * Math.cos(wd * dt), a2: -decay * decay, w: wires.tailGain / Math.sqrt(nTail) };
+    }
+    if (r >= nRes) { // the wire's own low rings: long-lived pitches near longHz, different on every wire
+      const hz = wires.longHz * (1 + wires.longSpread * (2 * frac(((j * nLong) + (r - nRes) + 0.5) * 0.6180339887498949) - 1)), wd = 2 * Math.PI * hz, decay = Math.exp(-wires.longSigma * dt);
+      return { a1: 2 * decay * Math.cos(wd * dt), a2: -decay * decay, w: wires.longGain / Math.sqrt(nLong) };
+    }
     const spread = wires.coilCount != null;
     const hz = spread ? wires.coilLowHz * (wires.coilHighHz / wires.coilLowHz) ** frac((j * nRes + r + 0.5) * 0.6180339887498949) : wires.coilHz[r];
     const wd = 2 * Math.PI * hz;
-    const decay = Math.exp(-wires.coilSigma * dt);
+    const decay = Math.exp(-wires.coilSigma * (spread ? (hz / 4000) ** (wires.coilSigmaTilt ?? 0) : 1) * dt);
     return { a1: 2 * decay * Math.cos(wd * dt), a2: -decay * decay, w: spread ? (hz / 4000) ** (wires.coilTilt ?? 0) : 1 - 0.15 * r };
   };
-  const rings = Array.from({ length: nWire }, (_, j) => Array.from({ length: nRes }, (__, r) => ringOf(j, r)));
-  const ringState = Array.from({ length: nWire }, () => new Float64Array(2 * nRes));
-  let calm = 0;
-  let resting = false;
+  const rings = Array.from({ length: nWire }, (_, j) => Array.from({ length: nRing }, (__, r) => ringOf(j, r)));
+  const ringState = Array.from({ length: nWire }, () => new Float64Array(2 * nRing));
   let tNow = 0;
   if (W) {
     Cs = Array.from({ length: nWire }, () => new Float64Array(nWire));
@@ -378,25 +391,22 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
         Cs[a1][b1] = sum;
       }
     }
+    // the strainer's pull has been on the head since before the blow: start it bent to rest under that pull, not flat and then jerked
+    for (let q = 0; q < nCoupled; q++) {
+      const k = W.idx[q];
+      let f = 0;
+      for (let j = 0; j < nWire; j++) f += W.S[j][q] * pullOf[j];
+      z[k] = f * staticGain[k];
+    }
+    for (let j = 0; j < nWire; j++) {
+      let u = 0;
+      for (let q = 0; q < nCoupled; q++) u += W.S[j][q] * z[W.idx[q]];
+      wPos[j] = u + pullOf[j] / wires.stiffness;
+    }
   }
   /** One step of the wires against the head's present state. Fills fk, returns the sound the wires' own clicks give. */
   const stepWires = () => {
     const { massKg, stiffness, damping, gain } = wires;
-    if (resting) {
-      // the wires lie quiet on the head and only their rings are left
-      let rest = 0;
-      for (let j = 0; j < nWire; j++) {
-        const st = ringState[j];
-        for (let r = 0; r < nRes; r++) {
-          const y0 = rings[j][r].a1 * st[2 * r] + rings[j][r].a2 * st[2 * r + 1];
-          st[2 * r + 1] = st[2 * r];
-          st[2 * r] = y0;
-          rest += y0;
-        }
-      }
-      if (rest * rest < 1e-14) wiresLive = false;
-      return gain * rest;
-    }
     const kEff = stiffness + damping / dt;
     for (let j = 0; j < nWire; j++) {
       let u = 0;
@@ -414,16 +424,16 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
       }
     }
     let sound = 0;
-    let touching = true;
     for (let j = 0; j < nWire; j++) {
       let uNew = uFree[j];
       for (let l = 0; l < nWire; l++) uNew += Cs[j][l] * wF[l];
       wVel[j] += (dt * (pullOf[j] - wF[j])) / massKg;
       wPos[j] += dt * wVel[j];
       wPen[j] = wPos[j] - uNew;
-      const impulse = wF[j] - wFprev[j];
+      if (wF[j] === 0) flown[j] = 1;
+      const impulse = flown[j] ? wF[j] - wFprev[j] : 0;
       const st = ringState[j];
-      for (let r = 0; r < nRes; r++) {
+      for (let r = 0; r < nRing; r++) {
         const y1 = st[2 * r];
         const y0 = rings[j][r].a1 * y1 + rings[j][r].a2 * st[2 * r + 1] + impulse * rings[j][r].w;
         st[2 * r + 1] = y1;
@@ -431,7 +441,6 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
         sound += y0;
       }
       wFprev[j] = wF[j];
-      if (wF[j] === 0) touching = false;
     }
     for (let q = 0; q < nCoupled; q++) {
       let f = 0;
@@ -443,8 +452,6 @@ export function hit({ drum, stick, glideBeta, fs, seconds, report = null, wires 
       report.wireFlight ??= [];
       report.wireFlight[bin] = (report.wireFlight[bin] ?? 0) + wF.reduce((c, f) => c + (f === 0 ? 1 : 0), 0) / (fs / 1000);
     }
-    calm = touching ? calm + 1 : 0;
-    if (calm > 1500) { resting = true; fk.fill(0); }
     return gain * sound;
   };
 

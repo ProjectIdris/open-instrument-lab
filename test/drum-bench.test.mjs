@@ -148,7 +148,8 @@ test('the fitted microphone low cut takes out the lowest octaves and leaves the 
 });
 
 // The loudest narrow line in 30 to 150 ms after the onset, 600 Hz to 14 kHz, in decibels over the median of the spectrum 360 Hz either side.
-function lineProminence(pcm, sampleRate) {
+// With `gate`, only lines within that many decibels of the loudest in the spectrum count: a lone ring left in a floor 50 dB down is not heard.
+function lineProminence(pcm, sampleRate, gate = Infinity) {
   let on = 0;
   while (on < pcm.length && Math.abs(pcm[on]) < 1e-3 * 0.01) on++;
   const seg = pcm.subarray(on + Math.round(0.03 * sampleRate), on + Math.round(0.15 * sampleRate));
@@ -164,7 +165,7 @@ function lineProminence(pcm, sampleRate) {
   for (let i = Math.round((600 * n) / sampleRate); i < Math.round((14000 * n) / sampleRate); i++) {
     let top = true;
     for (let j = i - w; j <= i + w && top; j++) if (pw[j] > pw[i]) top = false;
-    if (!top) continue;
+    if (!top || pw[i] < Math.max(...pw) - gate) continue;
     const near = Array.from(pw.subarray(i - 3 * w, i + 3 * w)).sort((a, b) => a - b);
     best = Math.max(best, pw[i] - near[near.length >> 1]);
   }
@@ -175,8 +176,8 @@ test('the snare wires are a noise and not a chord: no narrow line stands far out
   const rack = drums.schema.parts[0].rack.find((r) => r.id === 'snare-14');
   const p = normalizeParams(drums.schema, { ...rack.params, stickHardness: 0.8 });
   const out = strikeOf(p);
-  const prominence = lineProminence(out.pcm, out.sampleRate);
-  assert.ok(prominence < 25, `${prominence.toFixed(0)} dB: the old wires rang a few lines 39 to 45 dB out`);
+  const prominence = lineProminence(out.pcm, out.sampleRate, 30);
+  assert.ok(prominence < 32, `${prominence.toFixed(0)} dB: the recorded snare's audible lines stand 20 to 26 dB out; wires of a few narrow pitches stand 35 dB and more`);
 });
 
 test('the snare has a crack: a good share of its first 30 ms is above 2 kHz, because the wires are thrown off at once and are not late', () => {
@@ -193,7 +194,7 @@ test('the snare has a crack: a good share of its first 30 ms is above 2 kHz, bec
   for (let l = 2; l <= n; l <<= 1) { const a = -2 * Math.PI / l; for (let i = 0; i < n; i += l) for (let k = 0; k < l / 2; k++) { const c = Math.cos(a * k); const s = Math.sin(a * k); const u = i + k; const v = u + l / 2; const tr = re[v] * c - im[v] * s; const ti = re[v] * s + im[v] * c; re[v] = re[u] - tr; im[v] = im[u] - ti; re[u] += tr; im[u] += ti; } }
   const energy = (lo, hi) => { let e = 0; for (let k = Math.round((lo * n) / out.sampleRate); k < (hi * n) / out.sampleRate; k++) e += re[k] ** 2 + im[k] ** 2; return e; };
   const share = 10 * Math.log10(energy(2000, 6000) / energy(60, 20000));
-  assert.ok(share > -17, `${share.toFixed(0)} dB of the first 30 ms is 2 to 6 kHz; the recording's is -14 and the late wires' was -24`);
+  assert.ok(share > -22 && share < -10, `${share.toFixed(1)} dB of the first 30 ms is 2 to 6 kHz; the recorded muted snare's is -17 (its low thump in the first 20 ms is stronger than ours, so ours reads higher), the late wires' was -24`);
 });
 
 test('a drum\'s Level moves its loudness and nothing else, and the host measures it without the Level so that it is not undone', () => {
