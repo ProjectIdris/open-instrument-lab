@@ -1,0 +1,239 @@
+{
+  "about": "Starter materials with published density and Young's modulus. These are typical handbook or supplier values, rounded as the source prints them: not measurements of any particular string, bar or board. Choose 'custom' in the app to type your own. Add entries here with their source; the app lists them automatically. Each material also has a 'look' (two colours) that only decides how it is drawn on the bench; it is not a physical property.",
+  "materials": [
+    {
+      "id": "sitka-spruce",
+      "name": "Sitka spruce",
+      "family": "wood",
+      "densityKgM3": 448,
+      "youngModulusPa": 11880000000,
+      "note": "Along the grain, air-dried to about 12% moisture. Density is the handbook specific gravity (oven-dry basis) converted to 12% moisture; modulus is the handbook bending modulus raised by 10% as the handbook itself advises for the along-grain value.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Spruce, Sitka, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#e8d5a6",
+        "grain": "#c9b078"
+      }
+    },
+    {
+      "id": "engelmann-spruce",
+      "name": "Engelmann spruce",
+      "family": "wood",
+      "densityKgM3": 392,
+      "youngModulusPa": 9790000000,
+      "note": "Along the grain, about 12% moisture; derived as for Sitka spruce.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Spruce, Engelmann, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#eadbb4",
+        "grain": "#cdb887"
+      }
+    },
+    {
+      "id": "western-redcedar",
+      "name": "Western redcedar",
+      "family": "wood",
+      "densityKgM3": 358.4,
+      "youngModulusPa": 8470000000,
+      "note": "Along the grain, about 12% moisture; derived as for Sitka spruce.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Western redcedar, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#c98f64",
+        "grain": "#a8714a"
+      }
+    },
+    {
+      "id": "american-basswood",
+      "name": "American basswood",
+      "family": "wood",
+      "densityKgM3": 414.4,
+      "youngModulusPa": 11110000000,
+      "note": "Along the grain, about 12% moisture; derived as for Sitka spruce.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Basswood, American, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#eadfc4",
+        "grain": "#cfc3a3"
+      }
+    },
+    {
+      "id": "red-alder",
+      "name": "Red alder",
+      "family": "wood",
+      "densityKgM3": 459.2,
+      "youngModulusPa": 10450000000,
+      "note": "Along the grain, about 12% moisture; derived as for Sitka spruce.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Alder, red, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#d9ac7c",
+        "grain": "#b98a5a"
+      }
+    },
+    {
+      "id": "sugar-maple",
+      "name": "Sugar (hard) maple",
+      "family": "wood",
+      "densityKgM3": 705.6,
+      "youngModulusPa": 13860000000,
+      "note": "Along the grain, about 12% moisture; derived as for Sitka spruce.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Maple, Sugar, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#efdcb3",
+        "grain": "#d9c18a"
+      }
+    },
+    {
+      "id": "white-ash",
+      "name": "White ash",
+      "family": "wood",
+      "densityKgM3": 672,
+      "youngModulusPa": 13200000000,
+      "note": "Along the grain, about 12% moisture; derived as for Sitka spruce.",
+      "source": {
+        "title": "Wood Handbook: Wood as an Engineering Material, FPL-GTR-190, Chapter 5",
+        "publisher": "USDA Forest Service, Forest Products Laboratory",
+        "url": "https://research.fs.usda.gov/download/treesearch/37427.pdf",
+        "locator": "Table 5-3a, Ash, White, 12% line; Table 5-1 footnote a"
+      },
+      "look": {
+        "base": "#e6d4a8",
+        "grain": "#c8b27c"
+      }
+    },
+    {
+      "id": "steel-music-wire",
+      "name": "Steel (music wire)",
+      "family": "metal",
+      "densityKgM3": 7750,
+      "youngModulusPa": 206840000000,
+      "note": "Nominal spring-material values for music wire, rounded as the supplier prints them.",
+      "source": {
+        "title": "Spring Material Options (material properties table)",
+        "publisher": "Lee Spring",
+        "url": "https://www.leespring.com/spring-materials",
+        "locator": "row Music Wire: Density and Modulus of Elasticity columns"
+      },
+      "look": {
+        "base": "#b9bec4",
+        "grain": "#9aa0a8"
+      }
+    },
+    {
+      "id": "nickel-200",
+      "name": "Nickel",
+      "family": "metal",
+      "densityKgM3": 8890,
+      "youngModulusPa": 205000000000,
+      "note": "Commercially pure annealed nickel (Nickel 200). Cold-drawn wire may differ.",
+      "source": {
+        "title": "Nickel 200 & 201 technical bulletin",
+        "publisher": "Special Metals Corporation",
+        "url": "https://www.specialmetals.com/documents/technical-bulletins/nickel-200.pdf",
+        "locator": "Table 2 (density); Table 4 (modulus, 26 C)"
+      },
+      "look": {
+        "base": "#c4c6c0",
+        "grain": "#a7aaa3"
+      }
+    },
+    {
+      "id": "phosphor-bronze",
+      "name": "Phosphor bronze",
+      "family": "metal",
+      "densityKgM3": 8860,
+      "youngModulusPa": 110310000000,
+      "note": "Alloy C51000 bar-stock data; the sheet does not state the temper for the modulus row.",
+      "source": {
+        "title": "C51000 phosphor bronze 5% A data sheet",
+        "publisher": "Wieland Concast",
+        "url": "https://www.concast.com/files/C51000.pdf",
+        "locator": "Physical properties table: Density; Modulus of elasticity in tension"
+      },
+      "look": {
+        "base": "#b07a43",
+        "grain": "#8d5f31"
+      }
+    },
+    {
+      "id": "brass",
+      "name": "Brass",
+      "family": "metal",
+      "densityKgM3": 8581,
+      "youngModulusPa": 110320000000,
+      "note": "A nominal spring-supplier brass row; the alloy grade is not stated.",
+      "source": {
+        "title": "Spring Material Options (material properties table)",
+        "publisher": "Lee Spring",
+        "url": "https://www.leespring.com/spring-materials",
+        "locator": "row Brass: Density and Modulus of Elasticity columns"
+      },
+      "look": {
+        "base": "#cfa84a",
+        "grain": "#a98532"
+      }
+    },
+    {
+      "id": "nylon-66",
+      "name": "Nylon 6/6",
+      "family": "polymer",
+      "densityKgM3": 1140,
+      "youngModulusPa": 2670000000.0,
+      "note": "Bulk moulded or extruded nylon 6/6, as the data sheet gives it: density 1.14 g/cm³; tensile modulus 350,000 to 425,000 psi (2.4 to 2.9 GPa), here the middle, 2.67 GPa. A drawn guitar-string monofilament is oriented and can be stiffer, and nylon softens as it takes up moisture, so treat it as a starting point and type your own for a particular string.",
+      "source": {
+        "title": "CNC Material Data Sheet: Nylon 6/6",
+        "publisher": "Proto Labs",
+        "url": "https://www.protolabs.com/media/slyigq1s/2026-026-cnc-material-data-sheet_nylon-6-6.pdf",
+        "locator": "Properties table: Density, ASTM D792, 1.14 g/cm3; Tensile Modulus, ASTM D638, 350,000-425,000 psi"
+      },
+      "look": {
+        "base": "#ece6d6",
+        "grain": "#d6cdb6"
+      }
+    },
+    {
+      "id": "pet-film",
+      "name": "PET film (Mylar)",
+      "family": "film",
+      "densityKgM3": 1390,
+      "youngModulusPa": 3800000000,
+      "note": "Biaxially oriented polyester film as drum heads are made of. Density is the data sheet's 1.39 g/cc (92 gauge general-use film); the modulus is the 3,800 MPa machine-direction tensile modulus of the 50 micron grade from a manufacturer's data sheet (Tap Plastics prints 710,000 psi for its 92 gauge film, so it varies with grade and direction). A drum head's pitch comes from its mass per area and the tension it is wound to, not its stiffness, so the modulus matters little here.",
+      "source": {
+        "title": "Tech Data: Mylar",
+        "publisher": "TAP Plastics",
+        "url": "https://www.tapplastics.com/uploads/pdf/Tech_Data-_Mylar.pdf",
+        "locator": "Typical properties: Density, ASTM D1505, 1.39 g/cc (92 gauge general-use film). Modulus: Mylar A 50 to 125 micron data sheet, DuPont Teijin Films, tensile modulus MD 3,800 MPa, https://media.easycomposites.co.uk/datasheets/Mylar_A_50_to_125mic.pdf"
+      },
+      "look": {
+        "base": "#e9eef0",
+        "grain": "#d3dce0"
+      }
+    }
+  ]
+}

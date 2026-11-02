@@ -1,0 +1,12 @@
+{
+  "name": "open-instrument-lab",
+  "version": "0.1.0",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "description": "A local web app for building and playing physical-model instruments.",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node server/index.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}

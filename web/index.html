@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open Instrument Lab</title>
+  <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/bench.css">
+  <script type="module" src="/js/bench/main.js"></script>
+</head>
+<body class="bench-page">
+  <header class="topbar">
+    <h1>Open Instrument Lab</h1>
+    <input id="instrument-name" class="instrument-name" type="text" maxlength="80" autocomplete="off" aria-label="Instrument name">
+    <div class="menu">
+      <button id="instruments-button" type="button" aria-expanded="false" aria-controls="instruments-menu">Take one off the wall</button>
+      <div id="instruments-menu" class="menu-list" hidden></div>
+    </div>
+    <div class="topbar-actions">
+      <button id="undo" type="button" class="quiet" title="Undo (Ctrl+Z)">Undo</button>
+      <button id="view-fit" type="button" class="quiet" title="Show the whole guitar">Whole guitar</button>
+      <button id="view-neck" type="button" class="quiet" title="Come in close on the neck">Close on the neck</button>
+      <button id="unit" type="button" class="quiet" title="Measure in millimetres or inches">mm</button>
+      <button id="duplicate" type="button" class="quiet" title="Keep this one on the shelf and work on a copy">Duplicate</button>
+      <button id="compare" type="button" class="quiet" title="Flip between the last two versions (Alt+B)" disabled>A/B</button>
+      <button id="save-file" type="button" class="quiet">Save</button>
+      <label class="quiet button-like">Open<input id="open-file" type="file" accept=".json,application/json" hidden></label>
+      <div class="menu">
+        <button id="export-button" type="button" class="quiet" aria-expanded="false" aria-controls="export-menu" title="Save notes as WAV files">Save sound</button>
+        <div id="export-menu" class="menu-list export-menu" hidden></div>
+      </div>
+      <a class="button-like quiet" href="/forms.html" title="The plain panel for engines without a workbench">Other instruments</a>
+    </div>
+  </header>
+
+  <nav id="versions" class="versions" aria-label="Versions on the shelf" hidden>
+    <span class="versions-title">Versions</span>
+    <span id="versions-list" class="versions-list"></span>
+    <span class="versions-hint">A/B (Alt+B) flips between the last two.</span>
+  </nav>
+
+  <section class="shelf" aria-label="Wood and metal samples">
+    <div class="shelf-group"><h2>Woods</h2><div id="woods" class="swatches"></div></div>
+    <div class="shelf-group"><h2 id="shelf-metals-title">Strings: metal and nylon</h2><div id="metals" class="swatches"></div></div>
+    <div class="shelf-group" id="shelf-extras" hidden><h2>Heads</h2><div id="extras" class="swatches"></div></div>
+  </section>
+
+  <div class="bench-row">
+    <aside class="rack left" aria-label="Rack of strings">
+      <h2 id="rack-left-title">Strings</h2>
+      <p id="rack-left-hint" class="rack-hint">Drag one onto the neck.</p>
+      <div id="strings" class="coils"></div>
+    </aside>
+
+    <main class="bench" aria-label="The bench">
+      <svg id="bench-svg" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="The guitar on the bench. Drag the nut, the bridge, a peg or the edge of the body; touch a string to pluck it, or hold the right button and sweep across them to strum."></svg>
+      <p id="status" class="bench-status" aria-live="polite">Touch a string to pluck it, or hold the right button and sweep across the strings to strum. Drag the nut or the bridge to change the length, turn a peg to tune, drag a string from the rack, or drag a wood onto the body.</p>
+      <p id="notice" class="notice bench-notice" hidden></p>
+    </main>
+
+    <aside class="rack right" aria-label="Hands and tuner">
+      <h2 id="hands-title">Hands</h2>
+      <div id="hands" class="hands"></div>
+      <div data-parts hidden>
+        <h2 id="parts-title">Frets and pickup</h2>
+        <p id="parts-hint" class="rack-hint">Drag a fret onto the neck, or the pickup onto the strings.</p>
+        <div id="parts" class="coils parts"></div>
+      </div>
+      <h2>Tuner</h2>
+      <div id="tuner" class="tuner"></div>
+      <p id="tuner-hint" class="rack-hint">Click a string's note tag to tune it to the nearest note.</p>
+      <details id="drawer" class="drawer">
+        <summary>Maker's drawer</summary>
+        <p class="rack-hint">Finer adjustments and your own materials.</p>
+        <div id="drawer-shared" class="control-list"></div>
+        <h3 id="drawer-string-title" class="group-title"></h3>
+        <div id="drawer-string" class="control-list"></div>
+      </details>
+      <p id="approx" class="approx">The body's sound is an approximation worked out from its size, depth, sound hole and wood. It is not a measured guitar.</p>
+    </aside>
+  </div>
+
+  <footer class="player" aria-label="Keyboard">
+    <div class="player-bar">
+      <div class="knob"><label for="velocity">Touch</label><input id="velocity" type="range" min="0.1" max="1" step="0.01" value="0.7"><output id="velocity-out">0.70</output></div>
+      <div class="knob"><label for="volume">Volume</label><input id="volume" type="range" min="-30" max="6" step="0.5" value="0"><output id="volume-out">0 dB</output></div>
+      <div class="knob"><label for="length">Note length</label>
+        <select id="length"><option value="1.2">Short</option><option value="2.4" selected>Medium</option><option value="4">Long</option></select></div>
+      <button id="sustain" type="button" aria-pressed="false" title="Hold Space as well">Sustain</button>
+      <div class="octave"><button id="octave-down" type="button" aria-label="Octave down" title="Z">&#9664;</button><span id="octave-label">C3 &ndash; B5</span><button id="octave-up" type="button" aria-label="Octave up" title="X">&#9654;</button></div>
+      <button id="midi" type="button" class="quiet">Connect a MIDI keyboard</button>
+      <span id="midi-status" class="hint"></span>
+      <span id="progress" class="hint progress-text" aria-live="polite"></span>
+    </div>
+    <div id="keys" class="keys" role="group" aria-label="Piano keys. You can also play with the computer keyboard: A S D F G H J for white keys, W E T Y U for black keys, Z and X for octave."></div>
+  </footer>
+</body>
+</html>
