@@ -197,7 +197,7 @@ export const schema = {
     },
     {
       id: 'snareWires', type: 'toggle', layer: 'plain', group: 'shell', part: 'drum', label: 'Snare wires',
-      help: 'Twenty snare wires lying on the second head. They lift off it where it moves away faster than their pull can follow and land on it again, and each coil rings after every touch: the sizzle of a snare drum. The level and the pitches of the rings are chosen against a recorded snare with and without its wires.',
+      help: 'Twenty snare wires lying on the second head. They lift off it where it moves away faster than their pull can follow and land on it again, and each coil rings after every touch: the sizzle of a snare drum. The level, the pitches and the ring times are fitted to one recorded muted snare (a CC0 recording, used to compare only).',
       default: false, physical: 'other', visibleWhen: { bottomHead: [true] },
     },
     {
